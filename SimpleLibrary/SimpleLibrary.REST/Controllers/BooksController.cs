@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SimpleLibrary.Application.Services;
 using SimpleLibrary.Infrastructure.Models;
 using SimpleLibrary.REST.Models;
@@ -7,6 +8,7 @@ namespace SimpleLibrary.REST.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BooksController : ControllerBase
     {
         private readonly IBookService _bookService;
@@ -18,6 +20,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // GET: api/books
         [HttpGet]
+        [Authorize(Roles = "User,Librarian,Admin")]
         public async Task<ActionResult<IEnumerable<BookResponseModel>>> GetAll()
         {
             var books = await _bookService.GetAllBooksAsync();
@@ -29,6 +32,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // GET: api/books/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "User,Librarian,Admin")]
         public async Task<ActionResult<BookResponseModel>> GetById(int id)
         {
             var book = await _bookService.GetBookByIdAsync(id);
@@ -41,6 +45,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // POST: api/books
         [HttpPost]
+        [Authorize(Roles = "Librarian,Admin")]
         public async Task<ActionResult<BookResponseModel>> Create([FromBody] BookCreateModel model)
         {
             var book = new Book
@@ -64,6 +69,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // PUT: api/books/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Librarian,Admin")]
         public async Task<ActionResult<BookResponseModel>> Update(int id, [FromBody] BookUpdateModel model)
         {
             var book = new Book
@@ -85,6 +91,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // DELETE: api/books/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Librarian,Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _bookService.DeleteBookAsync(id);

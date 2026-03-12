@@ -34,6 +34,11 @@ namespace SimpleLibrary.Application.Services
             return loan;
         }
 
+        public async Task<IEnumerable<Loan>> GetLoansByUserIdAsync(int userId)
+        {
+            return await _loanRepository.GetLoansByUserIdAsync(userId);
+        }
+
         public async Task<Loan> CreateLoanAsync(Loan loan)
         {
             var book = await _bookRepository.GetByIdAsync(loan.BookId);

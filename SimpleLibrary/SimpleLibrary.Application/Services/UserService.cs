@@ -17,68 +17,83 @@ namespace SimpleLibrary.Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<User?> GetUserByEmailAsync(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return null;
-
-            var user = await _userRepository.GetByEmailAsync(email);
-            if (user == null)
-                return null;
-
-            return user;
-        }
-
         public async Task<User?> GetUserByIdAsync(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null)
-                return null;
+            return await _userRepository.GetByIdAsync(id);
+        }
 
-            return user;
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _userRepository.GetByEmailAsync(email);
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
-            var users = await _userRepository.GetAllAsync();
-            return users;
+            return await _userRepository.GetAllAsync();
         }
 
         public async Task<User> CreateUserAsync(User user, string password)
         {
-            //For lab4
-            //user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            user.PasswordHash = password;
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
             user.CreatedAt = DateTime.UtcNow;
 
             await _userRepository.AddAsync(user);
 
             user.Role = await _userRepository.GetRoleByIdAsync(user.RoleId)
-                    ?? throw new Exception("Role with this Id not found");
+                ?? throw new Exception("Role not found");
 
             return user;
         }
 
-        public async Task<bool> UpdateUserAsync(int id, User updatedUser)
+        public async Task<bool> UpdateProfileAsync(int userId, string fullName, string email, string? password)
         {
-            var existingUser = await _userRepository.GetByIdAsync(id);
-            if (existingUser == null)
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
                 return false;
 
-            existingUser.FullName = updatedUser.FullName;
-            existingUser.Email = updatedUser.Email;
+            user.FullName = fullName;
+            user.Email = email;
 
-            await _userRepository.UpdateAsync(existingUser);
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+            }
+
+            await _userRepository.UpdateAsync(user);
+
+            return true;
+        }
+
+        public async Task<bool> UpdateUserRoleAsync(int userId, int roleId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+                return false;
+
+            var role = await _userRepository.GetRoleByIdAsync(roleId);
+
+            if (role == null)
+                return false;
+
+            user.RoleId = role.Id;
+            user.Role = role;
+
+            await _userRepository.UpdateAsync(user);
+
             return true;
         }
 
         public async Task<bool> DeleteUserAsync(int id)
         {
             var user = await _userRepository.GetByIdAsync(id);
+
             if (user == null)
                 return false;
 
             await _userRepository.DeleteAsync(user);
+
             return true;
         }
     }

@@ -13,7 +13,8 @@ namespace SimpleLibrary.Application.Services
         Task<User?> GetUserByEmailAsync(string email);
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> CreateUserAsync(User user, string password);
-        Task<bool> UpdateUserAsync(int id, User user);
+        Task<bool> UpdateProfileAsync(int userId, string fullName, string email, string? password);
+        Task<bool> UpdateUserRoleAsync(int userId, int roleId);
         Task<bool> DeleteUserAsync(int id);
     }
 }

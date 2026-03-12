@@ -23,6 +23,15 @@ namespace SimpleLibrary.Infrastructure.Repositories
                 .Include(l => l.Book)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
+        public async Task<IEnumerable<Loan>> GetLoansByUserIdAsync(int userId)
+        {
+            return await _context.Loans
+                .Include(l => l.Book)
+                .Include(l => l.User)
+                .Where(l => l.UserId == userId)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Loan>> GetAllAsync() =>
             await _context.Loans
                 .Include(l => l.User)
