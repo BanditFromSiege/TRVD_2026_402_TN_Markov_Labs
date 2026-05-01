@@ -10,6 +10,7 @@ namespace SimpleLibrary.Infrastructure.Repositories
     public interface ILoanRepository
     {
         Task<Loan?> GetByIdAsync(int id);
+        Task<IEnumerable<Loan>> GetLoansByUserIdAsync(int userId);
         Task<IEnumerable<Loan>> GetAllAsync();
         Task AddAsync(Loan loan);
         Task UpdateAsync(Loan loan);

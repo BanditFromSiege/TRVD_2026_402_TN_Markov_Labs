@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SimpleLibrary.Application.Services;
 using SimpleLibrary.Infrastructure.Models;
 using SimpleLibrary.REST.Models;
+using System.Security.Claims;
 
 namespace SimpleLibrary.REST.Controllers
 {
@@ -18,20 +20,20 @@ namespace SimpleLibrary.REST.Controllers
 
         // GET: api/users
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<UserResponseModel>>> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
-
-            var result = users.Select(MapToResponse);
-
-            return Ok(result);
+            return Ok(users.Select(MapToResponse));
         }
 
         // GET: api/users/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserResponseModel>> GetUserById(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
+
             if (user == null)
                 return NotFound();
 
@@ -40,51 +42,69 @@ namespace SimpleLibrary.REST.Controllers
 
         // POST: api/users
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserResponseModel>> CreateUser([FromBody] UserCreateModel model)
         {
-            var validRoleIds = new[] { 1, 2, 3 }; // 1 = User, 2 = Librarian, 3 = Admin
-            if (!validRoleIds.Contains(model.RoleId))
-            {
-                return BadRequest("Invalid role");
-            }
-
             var user = new User
             {
                 FullName = model.FullName,
                 Email = model.Email,
-                RoleId = model.RoleId,
-                CreatedAt = DateTime.UtcNow
+                RoleId = model.RoleId
             };
 
             var created = await _userService.CreateUserAsync(user, model.Password);
 
-            var response = new UserResponseModel
-            {
-                Id = created.Id,
-                FullName = created.FullName,
-                Email = created.Email,
-                Role = created.Role.Name,
-                CreatedAt = created.CreatedAt
-            };
-
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = created.Id },
-                response
-            );
+                MapToResponse(created));
         }
 
-        // PUT: api/users/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateModel model)
+        // PUT: api/users/{id}/role
+        [HttpPut("{id}/role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UserRoleUpdateModel model)
         {
-            var user = new User
-            {
-                FullName = model.FullName,
-                Email = model.Email
-            };
+            var validRoleIds = new[] { 1, 2, 3 };
 
-            var updated = await _userService.UpdateUserAsync(id, user);
+            if (!validRoleIds.Contains(model.RoleId))
+                return BadRequest("Invalid role ID");
+
+            var updated = await _userService.UpdateUserRoleAsync(id, model.RoleId);
+
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        // GET: api/users/me
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<UserResponseModel>> GetMyProfile()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var user = await _userService.GetUserByIdAsync(userId);
+
+            if (user == null)
+                return NotFound();
+
+            return Ok(MapToResponse(user));
+        }
+
+        // PUT: api/users/me
+        [HttpPut("me")]
+        [Authorize]
+        public async Task<IActionResult> UpdateMyProfile([FromBody] UserProfileUpdateModel model)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var updated = await _userService.UpdateProfileAsync(
+                userId,
+                model.FullName,
+                model.Email,
+                model.Password);
 
             if (!updated)
                 return NotFound();
@@ -94,6 +114,7 @@ namespace SimpleLibrary.REST.Controllers
 
         // DELETE: api/users/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var deleted = await _userService.DeleteUserAsync(id);

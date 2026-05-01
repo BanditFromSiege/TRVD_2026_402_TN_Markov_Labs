@@ -7,10 +7,16 @@
         public string Password { get; set; } = null!;
         public int RoleId { get; set; }
     }
-    public class UserUpdateModel
+    public class UserRoleUpdateModel
+    {
+        public int RoleId { get; set; }
+    }
+
+    public class UserProfileUpdateModel
     {
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string? Password { get; set; }
     }
 
     public class UserResponseModel

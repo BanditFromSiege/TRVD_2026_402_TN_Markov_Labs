@@ -11,6 +11,7 @@ namespace SimpleLibrary.Application.Services
     {
         Task<IEnumerable<Loan>> GetAllLoansAsync();
         Task<Loan?> GetLoanByIdAsync(int id);
+        Task<IEnumerable<Loan>> GetLoansByUserIdAsync(int userId);
         Task<Loan> CreateLoanAsync(Loan loan);
         Task<Loan?> UpdateLoanAsync(int id, Loan loan);
         Task<bool> DeleteLoanAsync(int id);
