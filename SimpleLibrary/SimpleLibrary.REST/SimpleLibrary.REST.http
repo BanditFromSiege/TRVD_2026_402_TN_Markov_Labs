@@ -1,0 +1,6 @@
+@SimpleLibrary.REST_HostAddress = http://localhost:5292
+
+GET {{SimpleLibrary.REST_HostAddress}}/SimpleLibrary/
+Accept: application/json
+
+###
